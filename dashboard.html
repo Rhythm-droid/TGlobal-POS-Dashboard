@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dashboard — TGlobal POS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080809;
+  --surface: #0f0f12;
+  --surface-2: #15151a;
+  --surface-3: #1c1c22;
+  --border: rgba(255,255,255,0.07);
+  --border-2: rgba(255,255,255,0.04);
+  --text: #f0f0ee;
+  --text-2: rgba(240,240,238,0.5);
+  --text-3: rgba(240,240,238,0.25);
+  --green: #22c55e;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+  --blue: #3b82f6;
+  --sidebar: 218px;
+}
+
+html, body { height: 100%; overflow: hidden; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  display: flex;
+}
+
+/* ── SIDEBAR ─────────────────────── */
+.sidebar {
+  width: var(--sidebar);
+  height: 100vh;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.sidebar-brand {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-mark {
+  width: 28px; height: 28px;
+  background: var(--text);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--bg);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.brand-sub { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 11px;
+  color: var(--text-3);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.15s;
+}
+
+.back-link:hover { color: var(--text-2); }
+
+.nav {
+  flex: 1;
+  padding: 12px 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.nav::-webkit-scrollbar { display: none; }
+
+.nav-section-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--text-3);
+  padding: 2px 8px;
+  margin-bottom: 2px;
+  margin-top: 14px;
+}
+
+.nav-section-label:first-child { margin-top: 0; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-2);
+  cursor: pointer;
+  margin-bottom: 1px;
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+  position: relative;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+
+.nav-item.active {
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 2px;
+  background: var(--text);
+  border-radius: 0 2px 2px 0;
+}
+
+.nav-item svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+.sidebar-footer {
+  border-top: 1px solid var(--border);
+  padding: 10px 8px;
+}
+
+.user-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.user-row:hover { background: rgba(255,255,255,0.04); }
+
+.user-avatar {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #374151, #1f2937);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.user-name { font-size: 12px; font-weight: 600; }
+.user-role { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* ── MAIN ────────────────────────── */
+.main {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── TOPBAR ──────────────────────── */
+.topbar {
+  height: 50px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+
+.page-breadcrumb {
+  font-size: 12px;
+  color: var(--text-3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.page-breadcrumb span { color: var(--text); font-weight: 600; }
+
+.topbar-search {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 10px;
+  width: 200px;
+}
+
+.topbar-search input {
+  background: none;
+  border: none;
+  outline: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--text-2);
+  width: 100%;
+}
+
+.topbar-search input::placeholder { color: var(--text-3); }
+
+.kbd {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--text-3);
+  background: rgba(255,255,255,0.04);
+  padding: 2px 4px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-btn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--text-2);
+  position: relative;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.icon-btn:hover { border-color: rgba(255,255,255,0.14); color: var(--text); }
+
+.notif-badge {
+  position: absolute;
+  top: -4px; right: -4px;
+  background: var(--rose);
+  color: #fff;
+  font-size: 7px;
+  font-weight: 800;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--surface);
+}
+
+.create-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.12s;
+  text-decoration: none;
+}
+
+.create-btn:hover { opacity: 0.88; }
+
+/* ── CONTENT ─────────────────────── */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 40px;
+}
+
+.content::-webkit-scrollbar { width: 4px; }
+.content::-webkit-scrollbar-track { background: transparent; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── PAGE HEADER ─────────────────── */
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 16px;
+}
+
+.page-header-left {}
+.page-eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.page-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  margin-top: 3px;
+}
+
+.page-header-actions { display: flex; gap: 8px; align-items: flex-start; flex-shrink: 0; }
+
+.btn-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.12s, background 0.12s;
+  text-decoration: none;
+}
+
+.btn-sm.primary { background: var(--text); color: var(--bg); font-weight: 700; }
+.btn-sm.primary:hover { opacity: 0.88; }
+.btn-sm.ghost { background: rgba(255,255,255,0.05); color: var(--text-2); border: 1px solid var(--border); }
+.btn-sm.ghost:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+
+/* ── KPI GRID ────────────────────── */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  padding: 16px 18px 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-accent {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+}
+
+.kpi-accent.green { background: var(--green); }
+.kpi-accent.amber { background: var(--amber); }
+.kpi-accent.rose { background: var(--rose); }
+.kpi-accent.blue { background: var(--blue); }
+
+.kpi-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-3);
+  margin-bottom: 8px;
+}
+
+.kpi-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.kpi-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.kpi-sub { font-size: 10px; color: var(--text-3); }
+
+.kpi-badge {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.kpi-badge.up { background: rgba(34,197,94,0.12); color: var(--green); }
+.kpi-badge.down { background: rgba(244,63,94,0.12); color: var(--rose); }
+.kpi-badge.neu { background: rgba(255,255,255,0.06); color: var(--text-3); }
+
+/* ── CHART ROW ───────────────────── */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.card-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title { font-size: 13px; font-weight: 700; }
+.card-sub-text { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+.card-badge-sm {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.05);
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.card-body { padding: 14px 18px; }
+
+/* live dot */
+.live-row { display: flex; align-items: center; gap: 6px; }
+.live-dot {
+  width: 5px; height: 5px;
+  background: var(--green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+/* ── BAR CHART ───────────────────── */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 7px;
+  height: 130px;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  height: 100%;
+  justify-content: flex-end;
+}
+
+.bar {
+  width: 100%;
+  border-radius: 3px 3px 0 0;
+  background: rgba(255,255,255,0.08);
+  transition: background 0.2s;
+}
+
+.bar.active { background: var(--text); }
+.bar.semi { background: rgba(255,255,255,0.25); }
+
+.bar-label { font-size: 9px; color: var(--text-3); font-weight: 600; letter-spacing: 0.04em; }
+.bar-val { font-size: 9px; color: var(--text-3); font-family: 'JetBrains Mono', monospace; margin-bottom: 3px; }
+
+/* ── PAYMENT BARS ────────────────── */
+.pay-list { display: flex; flex-direction: column; gap: 12px; }
+
+.pay-row { display: flex; align-items: center; gap: 10px; }
+.pay-label { font-size: 11px; font-weight: 500; color: var(--text-2); width: 72px; }
+.pay-track { flex: 1; height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden; }
+.pay-fill { height: 100%; border-radius: 2px; background: var(--text); }
+.pay-pct { font-size: 10px; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--text); width: 28px; text-align: right; }
+.pay-amt { font-size: 10px; color: var(--text-3); width: 52px; text-align: right; }
+
+/* ── BOTTOM ROW ──────────────────── */
+.bottom-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+/* ── LIST ITEMS ──────────────────── */
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border-2);
+}
+
+.list-row:last-child { border-bottom: none; padding-bottom: 0; }
+.list-row:first-child { padding-top: 0; }
+
+.lr-left { flex: 1; min-width: 0; }
+.lr-title {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 2px;
+}
+
+.lr-sub { font-size: 10px; color: var(--text-3); }
+.lr-right { text-align: right; flex-shrink: 0; padding-left: 8px; }
+.lr-val { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; }
+
+.badge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.badge-green { background: rgba(34,197,94,0.12); color: var(--green); }
+.badge-amber { background: rgba(245,158,11,0.12); color: var(--amber); }
+.badge-rose { background: rgba(244,63,94,0.12); color: var(--rose); }
+.badge-blue { background: rgba(59,130,246,0.12); color: var(--blue); }
+.badge-gray { background: rgba(255,255,255,0.05); color: var(--text-3); }
+
+.stock-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.stock-low { background: rgba(245,158,11,0.12); color: var(--amber); }
+.stock-out { background: rgba(244,63,94,0.12); color: var(--rose); }
+
+/* ── FADE-IN ──────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.kpi { animation: fadeUp 0.35s ease both; }
+.kpi:nth-child(1) { animation-delay: 0.04s; }
+.kpi:nth-child(2) { animation-delay: 0.08s; }
+.kpi:nth-child(3) { animation-delay: 0.12s; }
+.kpi:nth-child(4) { animation-delay: 0.16s; }
+.charts-row, .bottom-row { animation: fadeUp 0.4s ease 0.2s both; }
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ──────────────────────────── -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-mark">TG</div>
+    <div>
+      <div class="brand-name">TGlobal POS</div>
+      <div class="brand-sub">Retail Intelligence</div>
+    </div>
+  </div>
+
+  <a class="back-link" href="index.html">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Back to Overview
+  </a>
+
+  <nav class="nav">
+    <div class="nav-section-label">Overview</div>
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Dashboard
+    </a>
+
+    <div class="nav-section-label">Operations</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      Products
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      New Bill
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Bill History
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Clients
+    </a>
+
+    <div class="nav-section-label">Finance</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+      Expenses
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      Reports
+    </a>
+
+    <div class="nav-section-label">Admin</div>
+    <a class="nav-item" href="docs.html">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+      Documentation
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Activity Log
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Settings
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-avatar">RA</div>
+      <div>
+        <div class="user-name">Rahul A.</div>
+        <div class="user-role">Admin</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- ── MAIN ─────────────────────────────── -->
+<div class="main">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="page-breadcrumb">
+        TGlobal &nbsp;/&nbsp; <span>Dashboard</span>
+      </div>
+      <div class="topbar-search">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(240,240,238,0.25)" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input placeholder="Search products, bills..." readonly />
+        <span class="kbd">⌘K</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="notif-badge">7</div>
+      </div>
+      <a class="create-btn" href="#">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Create Bill
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page-header">
+      <div class="page-header-left">
+        <div class="page-eyebrow">Overview</div>
+        <div class="page-title">Retail Intelligence</div>
+        <div class="page-sub">Live view across sales, inventory, and client operations · Sunday, 8 Mar 2026</div>
+      </div>
+      <div class="page-header-actions">
+        <a class="btn-sm ghost" href="docs.html">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          View Docs
+        </a>
+        <a class="btn-sm primary" href="#">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          New Bill
+        </a>
+      </div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Today's Revenue</div>
+        <div class="kpi-value">₹18,450</div>
+        <div class="kpi-footer">
+          <div class="kpi-sub">24 bills · 91 units sold</div>
+          <div class="kpi-badge up">↑ 12%</div>
+        </div>
+        <div class="kpi-accent green"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Outstanding Credit</div>
+        <div class="kpi-value">₹64,200</div>
+        <div class="kpi-footer">
+          <div class="kpi-sub">18 open dues</div>
+          <div class="kpi-badge down">Follow-up</div>
+        </div>
+        <div class="kpi-accent amber"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Avg Order Value</div>
+        <div class="kpi-value">₹2,340</div>
+        <div class="kpi-footer">
+          <div class="kpi-sub">1,847 total orders</div>
+          <div class="kpi-badge up">↑ 8%</div>
+        </div>
+        <div class="kpi-accent blue"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">All-Time Revenue</div>
+        <div class="kpi-value">₹43.2L</div>
+        <div class="kpi-footer">
+          <div class="kpi-sub">Excl. cancelled bills</div>
+          <div class="kpi-badge up">↑ 24%</div>
+        </div>
+        <div class="kpi-accent rose"></div>
+      </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="charts-row">
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">6-Month Revenue Momentum</div>
+            <div class="card-sub-text">Monthly gross revenue · excl. cancelled bills</div>
+          </div>
+          <div class="live-row">
+            <div class="live-dot"></div>
+            <div class="card-badge-sm">Live</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="bar-chart">
+            <div class="bar-col"><div class="bar-val">₹4.1L</div><div class="bar" style="height:40%"></div><div class="bar-label">Jan</div></div>
+            <div class="bar-col"><div class="bar-val">₹5.8L</div><div class="bar" style="height:57%"></div><div class="bar-label">Feb</div></div>
+            <div class="bar-col"><div class="bar-val">₹7.2L</div><div class="bar semi" style="height:72%"></div><div class="bar-label">Mar</div></div>
+            <div class="bar-col"><div class="bar-val">₹6.4L</div><div class="bar semi" style="height:63%"></div><div class="bar-label">Apr</div></div>
+            <div class="bar-col"><div class="bar-val">₹8.9L</div><div class="bar semi" style="height:88%"></div><div class="bar-label">May</div></div>
+            <div class="bar-col"><div class="bar-val">₹9.8L</div><div class="bar active" style="height:100%"></div><div class="bar-label">Jun</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Payment Distribution</div>
+            <div class="card-sub-text">By collection method</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="pay-list">
+            <div class="pay-row"><div class="pay-label">Cash</div><div class="pay-track"><div class="pay-fill" style="width:52%"></div></div><div class="pay-pct">52%</div><div class="pay-amt">₹22.5L</div></div>
+            <div class="pay-row"><div class="pay-label">UPI</div><div class="pay-track"><div class="pay-fill" style="width:31%;opacity:0.65"></div></div><div class="pay-pct">31%</div><div class="pay-amt">₹13.4L</div></div>
+            <div class="pay-row"><div class="pay-label">Card</div><div class="pay-track"><div class="pay-fill" style="width:11%;opacity:0.4"></div></div><div class="pay-pct">11%</div><div class="pay-amt">₹4.8L</div></div>
+            <div class="pay-row"><div class="pay-label">Credit</div><div class="pay-track"><div class="pay-fill" style="width:6%;opacity:0.25"></div></div><div class="pay-pct">6%</div><div class="pay-amt">₹2.6L</div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Row -->
+    <div class="bottom-row">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Top Products</div>
+          <div class="card-badge-sm">By Revenue</div>
+        </div>
+        <div class="card-body">
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Banarasi Silk Saree</div><div class="lr-sub">142 units</div></div><div class="lr-right"><div class="lr-val">₹3.6L</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Anarkali Kurti Set</div><div class="lr-sub">218 units</div></div><div class="lr-right"><div class="lr-val">₹2.8L</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Designer Lehenga</div><div class="lr-sub">67 units</div></div><div class="lr-right"><div class="lr-val">₹2.4L</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Chiffon Dupatta</div><div class="lr-sub">384 units</div></div><div class="lr-right"><div class="lr-val">₹1.9L</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Embroidered Blouse</div><div class="lr-sub">256 units</div></div><div class="lr-right"><div class="lr-val">₹1.5L</div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">Stock Watchlist</div>
+          <div class="card-badge-sm" style="background:rgba(244,63,94,0.1);color:var(--rose);">4 Out of Stock</div>
+        </div>
+        <div class="card-body">
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Raw Silk Saree · Red</div><div class="lr-sub">SKU-1042 · Sarees</div></div><div class="lr-right"><div class="stock-chip stock-low">3 left</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Palazzo Set · Sage</div><div class="lr-sub">SKU-2187 · Sets</div></div><div class="lr-right"><div class="stock-chip stock-low">5 left</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Chanderi Dupatta · Ivory</div><div class="lr-sub">SKU-3304 · Dupattas</div></div><div class="lr-right"><div class="stock-chip stock-out">0 left</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Organza Saree · Teal</div><div class="lr-sub">SKU-1098 · Sarees</div></div><div class="lr-right"><div class="stock-chip stock-low">7 left</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">Mirror Work Blouse · XS</div><div class="lr-sub">SKU-4451 · Blouses</div></div><div class="lr-right"><div class="stock-chip stock-out">0 left</div></div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Live Billing Feed</div>
+            <div class="card-sub-text">Most recent transactions</div>
+          </div>
+          <div class="live-dot"></div>
+        </div>
+        <div class="card-body">
+          <div class="list-row"><div class="lr-left"><div class="lr-title">JB-1284 · Priya Mehta</div><div class="lr-sub">2 min ago · UPI</div></div><div class="lr-right"><div class="lr-val">₹4,200</div><div class="badge badge-green">Paid</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">JB-1283 · Sunita Sharma</div><div class="lr-sub">18 min ago · Cash</div></div><div class="lr-right"><div class="lr-val">₹8,750</div><div class="badge badge-amber">Partial</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">JB-1282 · Kavya Nair</div><div class="lr-sub">1 hr ago · Card</div></div><div class="lr-right"><div class="lr-val">₹2,100</div><div class="badge badge-green">Paid</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">JB-1281 · Walk-in</div><div class="lr-sub">2 hr ago · Cash</div></div><div class="lr-right"><div class="lr-val">₹1,400</div><div class="badge badge-green">Paid</div></div></div>
+          <div class="list-row"><div class="lr-left"><div class="lr-title">JB-1280 · Deepa Iyer</div><div class="lr-sub">3 hr ago · Credit</div></div><div class="lr-right"><div class="lr-val">₹12,600</div><div class="badge badge-blue">Pending</div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
