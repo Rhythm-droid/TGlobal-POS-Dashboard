@@ -737,7 +737,7 @@ code {
     <div class="topbar-meta">
       <span>v2.0.0</span>
       <span>·</span>
-      <span>Last updated June 2025</span>
+      <span>Last updated March 2026</span>
       <span>·</span>
       <a href="dashboard.html">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
@@ -779,8 +779,9 @@ code {
         <div class="prop-row"><div class="prop-key">Version</div><div class="prop-val"><code>2.0.0</code></div></div>
         <div class="prop-row"><div class="prop-key">Type</div><div class="prop-val">Full-stack monorepo — client + server</div></div>
         <div class="prop-row"><div class="prop-key">Domain</div><div class="prop-val">Retail POS · Inventory · GST Billing · Analytics</div></div>
-        <div class="prop-row"><div class="prop-key">Compliance</div><div class="prop-val"><span class="tag tag-green">GST</span><span class="tag tag-blue">CGST / SGST</span><span class="tag tag-amber">HSN Codes</span></div></div>
+        <div class="prop-row"><div class="prop-key">Compliance</div><div class="prop-val"><span class="tag tag-green">GST</span><span class="tag tag-blue">CGST / SGST</span><span class="tag tag-amber">HSN Codes</span><span class="tag tag-gray">Tally Export</span></div></div>
         <div class="prop-row"><div class="prop-key">Database</div><div class="prop-val">MongoDB Atlas (cloud-hosted)</div></div>
+        <div class="prop-row"><div class="prop-key">Deployment</div><div class="prop-val">WSL Ubuntu · Production-ready</div></div>
         <div class="prop-row"><div class="prop-key">Auth</div><div class="prop-val">JWT · HttpOnly refresh tokens · 8 granular permissions</div></div>
       </div>
     </section>
@@ -845,12 +846,13 @@ code {
 │       ├── hooks/           TanStack Query hooks
 │       ├── services/        Axios API layer
 │       └── stores/          Zustand global state
-└── server/
+└── server/                  Express REST API
     └── src/
         ├── controllers/     Route handlers
         ├── models/          Mongoose schemas
         ├── routes/          Express routers
-        └── middleware/       Auth, validation, error</pre>
+        ├── middleware/       Auth, validation, error
+        └── services/        Domain logic</pre>
       </div>
 
       <h3>Key Design Decisions</h3>
@@ -866,13 +868,13 @@ code {
       <h2>MongoDB Schemas</h2>
       <div class="prop-table">
         <div class="prop-row"><div class="prop-key">User</div><div class="prop-val" style="font-size:12px;">Auth credentials, role, 8 permission flags, avatar, status</div></div>
-        <div class="prop-row"><div class="prop-key">Product</div><div class="prop-val" style="font-size:12px;">Name, SKU, HSN code, GST rate, <code>stockMatrix</code> Map&lt;color, Map&lt;size, qty&gt;&gt;, images[]</div></div>
+        <div class="prop-row"><div class="prop-key">Product</div><div class="prop-val" style="font-size:12px;">Name, SKU, category, HSN code, GST rate, colors[], sizes[], <code>stockMatrix</code> Map&lt;color, Map&lt;size, qty&gt;&gt;, images[]</div></div>
         <div class="prop-row"><div class="prop-key">Bill</div><div class="prop-val" style="font-size:12px;">Sequential number (JB-1001+), customer snapshot, items[], CGST/SGST, paid/due amounts, status</div></div>
         <div class="prop-row"><div class="prop-key">Customer</div><div class="prop-val" style="font-size:12px;">Name, phone, email, city, clientType (Retail/Wholesale/Boutique), status</div></div>
         <div class="prop-row"><div class="prop-key">Expense</div><div class="prop-val" style="font-size:12px;">Title, amount, category (10 types), payment mode, date, notes, receipt URL</div></div>
         <div class="prop-row"><div class="prop-key">AuditLog</div><div class="prop-val" style="font-size:12px;">userId, userName, action, details, timestamp — <strong style="color:var(--text);">90-day TTL auto-expiry</strong></div></div>
         <div class="prop-row"><div class="prop-key">Counter</div><div class="prop-val" style="font-size:12px;">Atomic sequential bill number generator — prevents race condition duplicates</div></div>
-        <div class="prop-row"><div class="prop-key">Settings</div><div class="prop-val" style="font-size:12px;">Store name, logo, GSTIN, address, invoice template preferences</div></div>
+        <div class="prop-row"><div class="prop-key">Settings</div><div class="prop-val" style="font-size:12px;">Store name, logo, GSTIN, address, invoice template preferences, terms, footer</div></div>
       </div>
     </section>
 
@@ -980,6 +982,8 @@ Client attaches access token via Axios interceptor
           <tr><td><span class="method m-put">PUT</span></td><td><span class="route">/products/:id</span></td><td>Permission</td><td>Update and rebuild stock matrix.</td></tr>
           <tr><td><span class="method m-patch">PATCH</span></td><td><span class="route">/products/:id/stock</span></td><td>Bearer</td><td>Set absolute variant stock quantity.</td></tr>
           <tr><td><span class="method m-patch">PATCH</span></td><td><span class="route">/products/:id/stock/adjust</span></td><td>Bearer</td><td>Add or subtract delta from variant stock.</td></tr>
+          <tr><td><span class="method m-get">GET</span></td><td><span class="route">/products/categories</span></td><td>Bearer</td><td>All categories with product count.</td></tr>
+          <tr><td><span class="method m-post">POST</span></td><td><span class="route">/products/bulk</span></td><td>Permission</td><td>Bulk create products from CSV import payload.</td></tr>
           <tr><td><span class="method m-delete">DELETE</span></td><td><span class="route">/products/:id</span></td><td>Permission</td><td>Delete product.</td></tr>
         </tbody>
       </table>
@@ -994,7 +998,9 @@ Client attaches access token via Axios interceptor
           <tr><td><span class="method m-post">POST</span></td><td><span class="route">/bills</span></td><td>Bearer</td><td>Create bill. Auto-deducts stock. Auto-creates customer.</td></tr>
           <tr><td><span class="method m-get">GET</span></td><td><span class="route">/bills/:id</span></td><td>Bearer</td><td>Single bill with all fields.</td></tr>
           <tr><td><span class="method m-patch">PATCH</span></td><td><span class="route">/bills/:id/status</span></td><td>Bearer</td><td>Update status. Cancelling restores stock.</td></tr>
-          <tr><td><span class="method m-get">GET</span></td><td><span class="route">/bills/export/csv</span></td><td>Permission</td><td>Download bills as CSV.</td></tr>
+          <tr><td><span class="method m-get">GET</span></td><td><span class="route">/bills/export/csv</span></td><td>Permission</td><td>Download bills as CSV with date range filter.</td></tr>
+          <tr><td><span class="method m-delete">DELETE</span></td><td><span class="route">/bills/bulk</span></td><td>Admin</td><td>Bulk delete bills by filter. Restores stock, logs audit.</td></tr>
+          <tr><td><span class="method m-delete">DELETE</span></td><td><span class="route">/bills/:id</span></td><td>Admin</td><td>Single bill delete. Restores variant stock automatically.</td></tr>
         </tbody>
       </table>
     </section>
@@ -1113,6 +1119,28 @@ Client attaches access token via Axios interceptor
         </div>
       </div>
 
+      <div class="shot-item">
+        <div class="shot-head"><div class="shot-num-wrap"><div class="shot-num">07</div><div class="shot-title">Staff Activity Log</div></div><span class="shot-priority tag-gray tag">Optional</span></div>
+        <div class="shot-body">
+          <ul>
+            <li>Mix of action types: LOGIN, BILL_CREATED, STOCK_ADJUSTED, EXPENSE_ADDED</li>
+            <li>Multiple staff names visible in the User column</li>
+            <li>Colour-coded action badges clearly visible</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="shot-item">
+        <div class="shot-head"><div class="shot-num-wrap"><div class="shot-num">08</div><div class="shot-title">Notification Bell Dropdown</div></div><span class="shot-priority tag-gray tag">Optional</span></div>
+        <div class="shot-body">
+          <ul>
+            <li>Bell badge showing a count (5+)</li>
+            <li>Dropdown open showing all three sections: Low Stock, Payment Dues, Cancelled</li>
+            <li>Crop to just the top-right corner for a tight, focused shot</li>
+          </ul>
+        </div>
+      </div>
+
     </section>
 
     <!-- SETUP -->
@@ -1173,8 +1201,8 @@ cd client && npm run dev
     </section>
 
     <div class="doc-footer">
-      <div class="doc-footer-l">TGlobal POS Dashboard · Technical Documentation · v2.0.0</div>
-      <div class="doc-footer-r">React 19 · Express · MongoDB Atlas</div>
+      <div class="doc-footer-l"><a href="https://tglobal.in/" style="color:var(--text-3);text-decoration:none;">tglobal.in</a> · TGlobal POS Dashboard · Technical Documentation · v2.0.0</div>
+      <div class="doc-footer-r"><a href="https://t-global-pos-dashboard.vercel.app/index.html" style="color:var(--text-3);text-decoration:none;">Live Demo</a> · React 19 · Express · MongoDB Atlas</div>
     </div>
 
   </div>
